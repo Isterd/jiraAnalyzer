@@ -1,0 +1,44 @@
+<div class="page-container">
+  <!-- Поиск -->
+  <div class="search-bar">
+    <input
+      type="text"
+      placeholder="Поиск проекта..."
+      [(ngModel)]="searchName"
+      (keyup.enter)="getSearchProjects()">
+  </div>
+
+  <!-- Индикатор загрузки -->
+  <p *ngIf="loading" class="text-center text-lg">Загрузка...</p>
+
+  <!-- Таблица проектов -->
+  <table *ngIf="projects && projects.length > 0 && !loading">
+    <thead>
+    <tr>
+      <th>Ключ</th>
+      <th>Название</th>
+      <th>URL</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let project of projects | paginate: { itemsPerPage: 10, currentPage: pageInfo.currentPage, totalItems: pageInfo.totalCount }">
+      <td>{{ project.key }}</td>
+      <td>{{ project.name }}</td>
+      <td><a [href]="project.url">{{ project.url }}</a></td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- Сообщение об отсутствии данных -->
+  <p *ngIf="(!projects || projects.length === 0) && !loading" class="text-center text-lg">
+    Проекты не найдены.
+  </p>
+
+  <!-- Пагинация -->
+  <pagination-controls
+    (pageChange)="onPageChange($event)"
+    [maxSize]="5"
+    [directionLinks]="true"
+    [autoHide]="true">
+  </pagination-controls>
+</div>

@@ -6,7 +6,7 @@ type JiraProject struct {
 	URL  string `json:"self"`
 }
 
-// JiraSearchResponse представляет структуру ответа Jira API для эндпоинта /rest/api/2/search.
+// JiraSearchResponse представляет структуру ответа JiraDB API для эндпоинта /rest/api/2/search.
 type JiraSearchResponse struct {
 	Expand     string      `json:"expand"`
 	StartAt    int         `json:"startAt"`
@@ -22,17 +22,16 @@ type JiraIssue struct {
 }
 
 type JiraFields struct {
-	Created     string          `json:"created"`
-	Updated     string          `json:"updated"`
-	Resolution  *JiraResolution `json:"resolution"`
-	Summary     string          `json:"summary"`
-	Description string          `json:"description"`
-	IssueType   JiraType        `json:"issuetype"`
-	Priority    JiraPriority    `json:"priority"`
-	Status      JiraStatus      `json:"status"`
-	TimeSpent   int             `json:"timespent"`
-	Creator     JiraAuthor      `json:"creator"`
-	Assignee    *JiraAuthor     `json:"assignee"`
+	Created     string       `json:"created"`
+	Updated     string       `json:"updated"`
+	Summary     string       `json:"summary"`
+	Description string       `json:"description"`
+	IssueType   JiraType     `json:"issuetype"`
+	Priority    JiraPriority `json:"priority"`
+	Status      JiraStatus   `json:"status"`
+	TimeSpent   int          `json:"timespent"`
+	Creator     JiraAuthor   `json:"creator"`
+	Assignee    *JiraAuthor  `json:"assignee"`
 }
 
 type JiraResolution struct {

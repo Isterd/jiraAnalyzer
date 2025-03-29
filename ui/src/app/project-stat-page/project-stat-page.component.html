@@ -1,0 +1,28 @@
+<div class="body">
+  <h3>
+    <a href="http://{{webUrl}}/myprojects">
+      Мои проекты
+    </a>
+    > {{ projects[0].toString() }}
+  </h3>
+  <div class="container">
+    <p projectKey ="open-task-title">Гистограмма, отражающая время, которое задачи провели в открытом состоянии</p>
+    <div class="chart" projectKey="open-task" [chart]="openTaskChart"></div>
+    <p projectKey ="open-state-title">Диаграмма, демонстрирующая распределение времени по состоянию "Open"</p>
+    <div class="chart" projectKey="open-state" [chart]="openStateChart"></div>
+    <p projectKey ="resolve-state-title"> Диаграмма, демонстрирующая распределение времени по состоянию "Resolve"</p>
+    <div class="chart" projectKey="resolve-state" [chart]="resolveStateChart"></div>
+    <p projectKey ="progress-state-title"> Диаграмма, демонстрирующая распределение времени по состоянию "Progress"</p>
+    <div class="chart" projectKey="progress-state" [chart]="progressStateChart"></div>
+    <p projectKey ="reopen-state-title">Диаграмма, демонстрирующая распределение времени по состоянию "Reopen" </p>
+    <div class="chart" projectKey="reopen-state" [chart]="reopenStateChart"></div>
+    <p projectKey ="activity-by-task-title">График активности по задачам</p>
+    <div class="chart" projectKey="activity-by-task" [chart]="activityByTaskChart"></div>
+    <p projectKey ="complexity-task-title">График сложности задач </p>
+    <div class="chart" projectKey="complexity-task" [chart]="complexityTaskChart"></div>
+    <p projectKey ="task-priority-title">График, отражающий приоритетность всех задач </p>
+    <div class="chart" projectKey="task-priority" [chart]="taskPriorityChart"></div>
+    <p projectKey ="close-task-priority-title">График, отражающий приоритетность закрытых задач </p>
+    <div class="chart" projectKey="close-task-priority" [chart]="closeTaskPriorityChart"></div>
+  </div>
+</div>

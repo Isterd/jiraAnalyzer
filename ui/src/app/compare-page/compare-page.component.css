@@ -1,0 +1,58 @@
+.compare-body {
+  margin-left: 12rem;
+  padding: 20px;
+}
+
+.header {
+  font-weight: 600;
+  text-decoration: underline;
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+.body_empty {
+  position: relative;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.icon {
+  margin-top: 20px;
+}
+
+img {
+  width: 8%;
+  height: auto; /* Улучшение для адаптивности */
+}
+
+.btn {
+  text-decoration: none;
+  color: #fff;
+  background-color: #37b34a;
+  text-align: center;
+  letter-spacing: .5px;
+  transition: .2s ease-out;
+  cursor: pointer;
+  font-size: 1rem;
+  outline: 0;
+  border: none;
+  border-radius: 2px;
+  display: inline-block;
+  height: 36px;
+  width: 150px;
+  line-height: 36px;
+  padding: 0 2rem;
+  text-transform: uppercase;
+  vertical-align: middle;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:hover {
+  background: #5ec56d;
+}
+
+.btn:active {
+  background: #8ade98;
+}

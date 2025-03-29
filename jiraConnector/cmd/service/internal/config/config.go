@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	handler "jiraAnalyzer/jiraConnector/internal/handler/http"
-	"jiraAnalyzer/jiraConnector/internal/jiraclient"
 	"jiraAnalyzer/jiraConnector/internal/repository/database"
+	"jiraAnalyzer/jiraConnector/internal/repository/jira"
 	"log"
 	"os"
 )
@@ -17,9 +17,9 @@ var (
 )
 
 type Config struct {
-	DB     database.DBConfig          `yaml:"DBSettings"`
-	Jira   jiraclient.ProgramSettings `yaml:"ProgramSettings"`
-	Server handler.ServerConfig       `yaml:"Server"`
+	DB            database.DBConfig           `yaml:"DBSettings"`
+	ClientConfig  jira.ClientConfig           `yaml:"JiraClient"`
+	JiraConnector handler.JiraConnectorConfig `yaml:"JiraConnector"`
 }
 
 func LoadConfig(ConfigPathFlag string) (Config, error) {

@@ -2,13 +2,15 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"jiraAnalyzer/jiraConnector/cmd/service/internal/config"
 	handler "jiraAnalyzer/jiraConnector/internal/handler/http"
-	"jiraAnalyzer/jiraConnector/internal/jiraclient"
+	"jiraAnalyzer/jiraConnector/internal/repository"
 	"jiraAnalyzer/jiraConnector/internal/repository/database"
+	"jiraAnalyzer/jiraConnector/internal/repository/jira"
 	"jiraAnalyzer/jiraConnector/internal/service"
 	"log"
 	"net/http"
@@ -29,25 +31,24 @@ func NewApp(cfg config.Config) (*app, *sqlx.DB, error) {
 		return nil, nil, fmt.Errorf("failed to create database config: %w", err)
 	}
 
-	clientJira := jiraclient.NewJiraClient(cfg.Jira)
+	clientJira := jira.NewJiraClient(cfg.ClientConfig)
 
 	log.Printf("create new database repository")
-	dbRepository := database.NewRepository(db)
+	dbRepository := repository.NewRepository(db, clientJira)
 
-	jiraService := service.NewJiraService(clientJira, dbRepository)
-	etl := service.NewETLService(jiraService, dbRepository, cfg.Jira.ThreadCount, cfg.Jira.IssueInOneRequest)
+	etl := service.NewETLService(dbRepository, cfg.ClientConfig.ThreadCount, cfg.ClientConfig.IssueInOneRequest)
 
 	log.Printf("create new http server")
 	r := mux.NewRouter()
 
 	r.Use(handler.LogMiddleware)
-	newHandler := handler.NewHandler(etl, r, cfg.Server)
+	newHandler := handler.NewHandler(etl, r, cfg.JiraConnector)
 
 	server := &http.Server{
-		Addr:         cfg.Jira.Host + ":" + cfg.Server.Port,
+		Addr:         cfg.JiraConnector.BaseUrl,
 		Handler:      newHandler,
-		ReadTimeout:  cfg.Server.ReadTimeout,
-		WriteTimeout: cfg.Server.WriteTimeout,
+		ReadTimeout:  cfg.JiraConnector.ReadTimeout,
+		WriteTimeout: cfg.JiraConnector.WriteTimeout,
 	}
 
 	return &app{
@@ -60,7 +61,7 @@ func (s *app) Run() error {
 
 	// Запуск HTTP-сервера в отдельной горутине
 	go func() {
-		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("HTTP server error: %v", err)
 		}
 	}()

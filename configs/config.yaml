@@ -1,0 +1,32 @@
+DBSettings:
+  dbUser: "pguser"
+  dbPassword: "pgpwd"
+  dbHost: "localhost"
+  dbPort: 5432
+  dbName: "testdb"
+  sslmode: "disable"
+
+JiraClient:
+  jiraUrl: "https://issues.apache.org/jira"
+  threadCount: 5
+  issueInOneRequest: 75
+  maxAttempts: 5
+  maxTimeSleep: 300ms
+  minTimeSleep: 10ms
+
+JiraConnector:
+  baseUrl: "localhost:8080"
+  readTimeout: 10s
+  writeTimeout: 10s
+
+Backend:
+  baseUrl: "http://localhost:8080"
+  host: "127.0.0.1"
+  port: "8000"
+  analyticsTimeout: 15s
+  resourceTimeout: 5s
+
+log:
+  level: info
+  file: logs/logs.log
+  error_file: logs/err_logs.log

@@ -9,6 +9,7 @@ type PageInfo struct {
 }
 
 type DBProject struct {
+	ID        int    `db:"id"`
 	Key       string `db:"key"`
 	Name      string `db:"name"`
 	URL       string `db:"url"`
@@ -16,11 +17,12 @@ type DBProject struct {
 }
 
 type DBIssue struct {
-	JiraID         string     `db:"jira_id"`
-	ProjectKey     string     `db:"project_key"`
+	ID             int        `db:"id"`
 	Key            string     `db:"key"`
+	ProjectKey     string     `db:"project_key"`
 	Created        time.Time  `db:"created"`
 	Updated        time.Time  `db:"updated"`
+	Closed         *time.Time `db:"closed"`
 	ResolutionDate *time.Time `db:"resolution_date"`
 	Summary        string     `db:"summary"`
 	Description    string     `db:"description"`
@@ -33,6 +35,7 @@ type DBIssue struct {
 }
 
 type DBChangelog struct {
+	ID         int       `db:"id"`
 	IssueID    string    `db:"issue_id"`
 	AuthorID   int       `db:"author_id"`
 	Created    time.Time `db:"created"`

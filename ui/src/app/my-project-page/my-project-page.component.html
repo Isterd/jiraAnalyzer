@@ -1,0 +1,19 @@
+<h2 class="header">
+  Мои проекты
+</h2>
+
+<p *ngIf="loading" class="text-center text-lg">Загрузка...</p>
+
+<app-my-project
+  *ngFor="let project of myProjects"
+  [myProject]="project">
+</app-my-project>
+
+<div class="body_empty" *ngIf="noProjects && inited">
+  <p>Вы не выбрали ни одного проекта для аналитики.</p>
+  <div class="icon">
+    <a href="http://localhost:4200/">
+      <img src="/assets/images/icon.png" alt="Политех">
+    </a>
+  </div>
+</div>

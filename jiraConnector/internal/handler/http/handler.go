@@ -13,18 +13,18 @@ import (
 	"strconv"
 )
 
-type ServerConfig struct {
-	Port         string        `yaml:"port"`
+type JiraConnectorConfig struct {
+	BaseUrl      string        `yaml:"baseUrl"`
 	ReadTimeout  time.Duration `yaml:"readTimeout"`
 	WriteTimeout time.Duration `yaml:"writeTimeout"`
 }
 
 type Handler struct {
 	etlService *service.ETLService
-	cfg        ServerConfig
+	cfg        JiraConnectorConfig
 }
 
-func NewHandler(etlService *service.ETLService, r *mux.Router, cfg ServerConfig) *mux.Router {
+func NewHandler(etlService *service.ETLService, r *mux.Router, cfg JiraConnectorConfig) *mux.Router {
 	h := &Handler{etlService: etlService, cfg: cfg}
 
 	r.HandleFunc("/updateProject", h.UpdateProject)
@@ -74,7 +74,7 @@ func (h *Handler) GetProjects(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.cfg.WriteTimeout)
 	defer cancel()
 
-	// Получаем данные из Jira через ETL-сервис
+	// Получаем данные из JiraDB через ETL-сервис
 	projects, pageInfo, err := h.etlService.GetProjectsFromJira(ctx, page, limit, search)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

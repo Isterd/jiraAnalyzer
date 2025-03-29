@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"jiraAnalyzer/jiraConnector/internal/models"
-	"jiraAnalyzer/jiraConnector/internal/repository/database"
+	"jiraAnalyzer/jiraConnector/internal/repository"
 	"log"
 	"strings"
 	"sync"
@@ -12,15 +12,13 @@ import (
 )
 
 type ETLService struct {
-	jiraService       *JiraService
-	repo              *database.Repository
+	repo              *repository.Repository
 	ThreadCount       int
 	IssueInOneRequest int
 }
 
-func NewETLService(jiraService *JiraService, repo *database.Repository, threadCount int, issueInOneRequest int) *ETLService {
+func NewETLService(repo *repository.Repository, threadCount int, issueInOneRequest int) *ETLService {
 	return &ETLService{
-		jiraService:       jiraService,
 		repo:              repo,
 		ThreadCount:       threadCount,
 		IssueInOneRequest: issueInOneRequest,
@@ -28,10 +26,10 @@ func NewETLService(jiraService *JiraService, repo *database.Repository, threadCo
 }
 
 func (s *ETLService) GetProjectsFromJira(ctx context.Context, page, limit int, search string) ([]models.DBProject, models.PageInfo, error) {
-	// Получаем все проекты из Jira
-	jiraProjects, err := s.jiraService.GetAllProjects(ctx)
+	// Получаем все проекты из JiraDB
+	jiraProjects, err := s.repo.GetAllProjects(ctx)
 	if err != nil {
-		return nil, models.PageInfo{}, fmt.Errorf("failed to fetch projects from Jira: %w", err)
+		return nil, models.PageInfo{}, fmt.Errorf("failed to fetch projects from JiraDB: %w", err)
 	}
 
 	// Фильтруем проекты по параметру search
@@ -110,14 +108,16 @@ func (s *ETLService) updateSingleProject(ctx context.Context, projectKey string)
 	// Если проект новый - загружаем метаданные
 	if !exists {
 		log.Printf("Project %s not found in DB, fetching metadata...", projectKey)
-		projects, err := s.jiraService.GetAllProjects(ctx)
+		projects, err := s.repo.GetAllProjects(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to fetch projects: %w", err)
 		}
-		project, err := s.transformProject(ctx, projects, projectKey)
+
+		project, err := s.transformProject(projects, projectKey)
 		if err != nil {
 			return fmt.Errorf("failed to transform project: %w", err)
 		}
+
 		if err := s.repo.SaveProject(ctx, project); err != nil {
 			return fmt.Errorf("failed to save project: %w", err)
 		}
@@ -140,8 +140,8 @@ func (s *ETLService) loadIssuesWithBackoff(ctx context.Context, projectKey strin
 		log.Printf("No issues found for project %s", projectKey)
 		return nil
 	}
-	batches := (totalIssues + s.IssueInOneRequest - 1) / s.IssueInOneRequest
 
+	batches := (totalIssues + s.IssueInOneRequest - 1) / s.IssueInOneRequest
 	for i := 0; i < batches; i++ {
 		if ctx.Err() != nil {
 			break
@@ -182,7 +182,7 @@ func (s *ETLService) loadIssuesWithBackoff(ctx context.Context, projectKey strin
 func (s *ETLService) loadIssuesBatch(ctx context.Context, projectKey string, startAt int) error {
 	log.Printf("Loading batch for project %s starting at %d", projectKey, startAt)
 
-	issues, err := s.jiraService.GetProjectIssues(ctx, projectKey, startAt)
+	issues, err := s.repo.GetProjectIssues(ctx, projectKey, startAt)
 	if err != nil {
 		return fmt.Errorf("failed to get project issues: %w", err)
 	}
@@ -199,10 +199,12 @@ func (s *ETLService) loadIssuesBatch(ctx context.Context, projectKey string, sta
 
 	for i, issue := range issues {
 		log.Printf("Transforming issue: %s", issue.Key)
+
 		dbIssues[i], err = s.transformIssue(issue, projectKey)
 		if err != nil {
 			return fmt.Errorf("failed to transform issue: %w", err)
 		}
+
 		changelogs, err := s.extractChangelogs(issue)
 		if err != nil {
 			return fmt.Errorf("failed to extract changelogs: %w", err)
@@ -225,7 +227,7 @@ func (s *ETLService) getIssueCount(projectKey string) int {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	count, err := s.jiraService.GetIssueCount(ctx, projectKey)
+	count, err := s.repo.GetIssueCount(ctx, projectKey)
 	if err != nil {
 		log.Printf("Failed to get issue count for project %s: %v", projectKey, err)
 		return 0
