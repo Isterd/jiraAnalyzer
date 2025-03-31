@@ -1,28 +1,46 @@
 <div class="body">
   <h3>
     <a href="http://{{webUrl}}/myprojects">
-      Мои проекты
+      <i class="fas fa-arrow-left"></i> Мои проекты
     </a>
     > {{ projects[0].toString() }}
   </h3>
+
   <div class="container">
-    <p projectKey ="open-task-title">Гистограмма, отражающая время, которое задачи провели в открытом состоянии</p>
-    <div class="chart" projectKey="open-task" [chart]="openTaskChart"></div>
-    <p projectKey ="open-state-title">Диаграмма, демонстрирующая распределение времени по состоянию "Open"</p>
-    <div class="chart" projectKey="open-state" [chart]="openStateChart"></div>
-    <p projectKey ="resolve-state-title"> Диаграмма, демонстрирующая распределение времени по состоянию "Resolve"</p>
-    <div class="chart" projectKey="resolve-state" [chart]="resolveStateChart"></div>
-    <p projectKey ="progress-state-title"> Диаграмма, демонстрирующая распределение времени по состоянию "Progress"</p>
-    <div class="chart" projectKey="progress-state" [chart]="progressStateChart"></div>
-    <p projectKey ="reopen-state-title">Диаграмма, демонстрирующая распределение времени по состоянию "Reopen" </p>
-    <div class="chart" projectKey="reopen-state" [chart]="reopenStateChart"></div>
-    <p projectKey ="activity-by-task-title">График активности по задачам</p>
-    <div class="chart" projectKey="activity-by-task" [chart]="activityByTaskChart"></div>
-    <p projectKey ="complexity-task-title">График сложности задач </p>
-    <div class="chart" projectKey="complexity-task" [chart]="complexityTaskChart"></div>
-    <p projectKey ="task-priority-title">График, отражающий приоритетность всех задач </p>
-    <div class="chart" projectKey="task-priority" [chart]="taskPriorityChart"></div>
-    <p projectKey ="close-task-priority-title">График, отражающий приоритетность закрытых задач </p>
-    <div class="chart" projectKey="close-task-priority" [chart]="closeTaskPriorityChart"></div>
+    <!-- 1. Гистограмма времени в открытом состоянии -->
+    <div class="chart-container">
+      <div class="chart-title">Гистограмма времени в открытом состоянии</div>
+      <div class="chart" id="open-time-histogram" [chart]="openTimeHistogram"></div>
+    </div>
+
+    <!-- 2. Распределение по состояниям -->
+    <div class="chart-container">
+      <div class="chart-title">Распределение по состояниям</div>
+      <div class="chart" id="status-distribution" [chart]="statusDistributionChart"></div>
+    </div>
+
+    <!-- 3. График активности -->
+    <div class="chart-container">
+      <div class="chart-title">Активность задач</div>
+      <div class="chart" id="activity-graph" [chart]="activityGraph"></div>
+    </div>
+
+    <!-- 4. График сложности -->
+    <div class="chart-container">
+      <div class="chart-title">Сложность задач</div>
+      <div class="chart" id="complexity-graph" [chart]="complexityGraph"></div>
+    </div>
+
+    <!-- 5. Приоритетность задач -->
+    <div class="chart-container">
+      <div class="chart-title">Приоритетность задач</div>
+      <div class="chart" id="priority-distribution" [chart]="priorityDistributionChart"></div>
+    </div>
+
+    <!-- 6. Приоритетность закрытых задач -->
+    <div class="chart-container">
+      <div class="chart-title">Приоритетность закрытых задач</div>
+      <div class="chart" id="closed-priority-distribution" [chart]="closedPriorityDistributionChart"></div>
+    </div>
   </div>
 </div>

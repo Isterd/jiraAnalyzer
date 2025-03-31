@@ -21,6 +21,7 @@ import { ProjectStatPageComponent } from './project-stat-page/project-stat-page.
 
 // Сервисы
 import { ConfigurationService } from './services/configuration.services';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 // Функция инициализации приложения
 export function initApp(configurationService: ConfigurationService) {
@@ -50,7 +51,7 @@ const routes = [
     ProjectWithCheckboxComponent,
     CompareProjectPageComponent,
     CheckboxWithSettingsComponent,
-    ProjectStatPageComponent
+    ProjectStatPageComponent,
   ],
   imports: [
     BrowserModule,
@@ -58,7 +59,7 @@ const routes = [
     FormsModule, // Для двухсторонней привязки данных
     NgxPaginationModule, // Для пагинации
     ChartModule, // Для графиков Highcharts
-    RouterModule.forRoot(routes) // Маршрутизация
+    RouterModule.forRoot(routes), BrowserAnimationsModule // Маршрутизация
   ],
   providers: [
     {

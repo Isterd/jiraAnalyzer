@@ -1,0 +1,47 @@
+/* home-page.component.css */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: #333;
+  line-height: 1.6;
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #fafafa;
+}
+
+h1 span {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #2ecc71; /* Салатовый акцент */
+  display: block;
+  margin-bottom: 2rem;
+  padding-bottom: 0.5rem;
+}
+
+p span {
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: 1.5rem;
+  padding: 0;
+  line-height: 1.8;
+  color: #555;
+}
+
+.ml-5 {
+  margin-left: 0;
+}
+
+a {
+  color: #27ae60; /* Немного темнее салатового для лучшей читаемости */
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* Минималистичные разделители */
+p:not(:last-child) span {
+  margin-bottom: 2rem;
+}

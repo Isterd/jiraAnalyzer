@@ -16,7 +16,7 @@ export class ProjectComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.adding = this.project.existence;
+    this.adding = Boolean(this.project.existence);
   }
 
   addMyProject(project: IProj) {

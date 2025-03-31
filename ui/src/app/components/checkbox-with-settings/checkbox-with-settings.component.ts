@@ -12,7 +12,7 @@ import {SettingBox} from "../../models/setting.model";
 export class CheckboxWithSettingsComponent implements OnInit {
   @Output() onChecked: EventEmitter<any> = new EventEmitter<{}>();
   @Input() box: SettingBox
-  isChecked: Boolean;
+  isChecked: boolean;
 
   constructor(private projectService: ProjectServices) {}
 

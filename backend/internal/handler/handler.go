@@ -18,11 +18,10 @@ func NewHandler(controllers *controller.Controller, r *mux.Router) *mux.Router {
 func setAnalyticRoute(ac *controller.AnalyticsController, r *mux.Router) {
 	r.HandleFunc("/api/v1/projects/{key}/analytics", ac.GetProjectAnalytics).Methods(http.MethodOptions, http.MethodGet)
 	r.HandleFunc("/api/v1/isAnalyzed/{key}", ac.IsProjectAnalytics).Methods(http.MethodOptions, http.MethodGet)
-	r.HandleFunc("/api/v1/delete/{key}", ac.DeleteProjectAnalytics).Methods(http.MethodOptions, http.MethodDelete)
+	r.HandleFunc("/api/v1/graph/delete/{key}", ac.DeleteProjectAnalytics).Methods(http.MethodOptions, http.MethodDelete)
 	r.HandleFunc("/api/v1/graph/get/{taskNumber:[0-9]+}", ac.GetGraph).Methods(http.MethodOptions, http.MethodGet)
 	r.HandleFunc("/api/v1/graph/make/{taskNumber:[0-9]}", ac.MakeGraph).Methods(http.MethodOptions, http.MethodPost)
 	r.HandleFunc("/api/v1/compare/{taskNumber:[0-9]+}", ac.GetComparison).Methods(http.MethodOptions, http.MethodGet)
-	r.HandleFunc("/api/v1/compare/{taskNumber:[0-9]}", ac.MakeComparison).Methods(http.MethodOptions, http.MethodPost)
 }
 
 func setProjectRoute(pc *controller.ProjectController, r *mux.Router) {

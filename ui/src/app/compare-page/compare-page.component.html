@@ -1,24 +1,41 @@
-<div class="compare-body">
-  <h2 class="header">Сравнение</h2>
+<div class="container">
+  <h2>Сравнение проектов</h2>
 
-  <!-- Список проектов -->
-  <div class="body" *ngIf="!noProjects && inited">
-    <p>Выберите проекты, на основе которых будет производиться сравнение (2–3).</p>
-    <project-checkbox
-      (onChecked)="childOnChecked($event)"
-      *ngFor="let project of projects"
-      [project]="project">
-    </project-checkbox>
-    <button class="btn my-2" (click)="onClickCompare()">Сравнить</button>
+  <div *ngIf="isLoading" class="loading">
+    Загрузка проектов...
   </div>
 
-  <!-- Сообщение об отсутствии проектов -->
-  <div class="body_empty" *ngIf="noProjects && inited">
-    <p>Вы не выбрали ни одного проекта для аналитики.</p>
-    <div class="icon">
-      <a [href]="'http://' + webUrl">
-        <img src="/assets/images/icon.png" alt="Политех">
-      </a>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="!isLoading && projects.length > 0">
+    <p>Выберите 2-3 проекта для сравнения:</p>
+
+    <div class="project-list">
+      <div *ngFor="let project of projects" class="project-item">
+        <div class="form-check">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            [id]="'project-' + project.key"
+            [checked]="isSelected(project)"
+            (change)="toggleProjectSelection(project, $event)">
+          <label class="form-check-label" [for]="'project-' + project.key">
+            {{ project.name }} ({{ project.key }})
+          </label>
+        </div>
+      </div>
     </div>
+
+    <button class="btn btn-primary compare-btn"
+            (click)="compareProjects()"
+            [disabled]="selectedProjectKeys.size < 2 || selectedProjectKeys.size > 3">
+      Сравнить
+    </button>
+  </div>
+
+  <div *ngIf="!isLoading && projects.length === 0" class="no-projects">
+    Нет доступных проектов для сравнения
   </div>
 </div>

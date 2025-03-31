@@ -1,22 +1,70 @@
-.chart {
-  display: table;
+.body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 500px));
-  grid-gap: 20px;
-  place-content: center;
-  margin-top: 20px;
-  border-radius: 20px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+h3 {
+  font-size: 1.5rem;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eaeaea;
 }
 
 a {
   text-decoration: none;
-  color: black;
+  color: #506ef9;
+  transition: color 0.3s ease;
 }
 
-p {
+a:hover {
+  color: #3a56d4;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 30px;
   margin-top: 20px;
-  margin-bottom: 20px;
-  text-decoration: none;
-  color: black;
+}
+
+.chart-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.chart-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #2c3e50;
+  padding-left: 10px;
+  border-left: 4px solid #506ef9;
+}
+
+.chart {
+  width: 100%;
+  height: 400px;
+  margin-top: 10px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .chart {
+    height: 350px;
+  }
 }

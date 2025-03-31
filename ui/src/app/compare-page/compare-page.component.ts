@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { IProj } from "../models/proj.model";
-import { DatabaseProjectServices } from "../services/database-project.services";
+import { DatabaseProjectServices } from '../services/database-project.services';
 import { Router } from '@angular/router';
-import { CheckedProject } from "../models/check-element.model";
-import { ConfigurationService } from "../services/configuration.services";
+import { IProj } from '../models/proj.model';
 
 @Component({
   selector: 'app-compare-page',
@@ -12,73 +10,81 @@ import { ConfigurationService } from "../services/configuration.services";
 })
 export class ComparePageComponent implements OnInit {
   projects: IProj[] = [];
-  checked: Map<string, number> = new Map(); // Уточнение типов
-  noProjects: boolean = false;
-  inited: boolean = false;
-
-  webUrl: string = ""; // Добавлен явный тип
+  selectedProjectKeys = new Set<string>(); // Используем Set для хранения ключей
+  isLoading = true;
+  errorMessage: string | null = null;
 
   constructor(
-    private configurationService: ConfigurationService,
-    private myProjectService: DatabaseProjectServices,
+    private projectService: DatabaseProjectServices,
     private router: Router
-  ) {
-    this.webUrl = configurationService.getValue("webUrl");
-  }
+  ) {}
 
   ngOnInit(): void {
-    this.myProjectService.getAll().subscribe(
-      (projects) => {
-        if (projects && projects.projects) {
-          this.noProjects = projects.projects.length === 0;
-          this.projects = projects.projects;
-          this.inited = true;
-        } else {
-          console.error('Ответ сервера некорректен:', projects);
-          this.noProjects = true;
+    this.loadProjects();
+  }
+
+  loadProjects(): void {
+    this.projectService.getAll().subscribe({
+      next: (response: any) => {
+        console.log('Получены проекты:', response);
+        this.projects = response.projects || [];
+        this.isLoading = false;
+
+        if (this.projects.length === 0) {
+          this.errorMessage = 'Нет доступных проектов для сравнения';
         }
       },
-      (error) => {
-        console.error('Ошибка при загрузке проектов:', error);
-        alert('Не удалось загрузить проекты. Проверьте соединение с сервером.');
-      }
-    );
-  }
-
-  onClickCompare(): void {
-    const items: string[] = [];
-    const ids: number[] = [];
-
-    this.checked.forEach((value: number, key: string) => {
-      if (value) {
-        items.push(key);
-        ids.push(value);
+      error: (err) => {
+        console.error('Ошибка загрузки проектов:', err);
+        this.errorMessage = 'Ошибка загрузки проектов';
+        this.isLoading = false;
       }
     });
-
-    if (items.length > 3) {
-      this.showErrorMessage("Максимальное число проектов для сравнения — 3.");
-    } else if (items.length < 2) {
-      this.showErrorMessage("Минимальное число проектов для сравнения — 2.");
-    } else {
-      this.router.navigate(['/compare-projects'], {
-        queryParams: {
-          keys: items.join(','), // Преобразуем массив в строку
-          values: ids.join(',') // Преобразуем массив в строку
-        }
-      });
-    }
   }
 
-  childOnChecked(project: CheckedProject): void {
-    if (project.Checked) {
-      this.checked.set(project.Name.toString(), project.Id.valueOf()); // Преобразование Number -> number
+  toggleProjectSelection(project: IProj, event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+    const isChecked = checkbox.checked;
+
+    if (isChecked) {
+      if (this.selectedProjectKeys.size >= 3) {
+        checkbox.checked = false;
+        this.errorMessage = 'Можно выбрать не более 3 проектов';
+        return;
+      }
+      this.selectedProjectKeys.add(project.key);
     } else {
-      this.checked.delete(project.Name.toString());
+      this.selectedProjectKeys.delete(project.key);
     }
+
+    this.errorMessage = null;
+    console.log('Выбранные проекты:', Array.from(this.selectedProjectKeys));
   }
 
-  showErrorMessage(msg: string): void {
-    alert(msg);
+  isSelected(project: IProj): boolean {
+    return this.selectedProjectKeys.has(project.key);
+  }
+
+  compareProjects(): void {
+    const selectedCount = this.selectedProjectKeys.size;
+    console.log('Попытка сравнения. Выбрано проектов:', selectedCount);
+
+    if (selectedCount < 2 || selectedCount > 3) {
+      this.errorMessage = 'Выберите от 2 до 3 проектов для сравнения';
+      return;
+    }
+
+    const keys = Array.from(this.selectedProjectKeys).join(',');
+    const selectedProjects = this.projects.filter(p => this.selectedProjectKeys.has(p.key));
+    const ids = selectedProjects.map(p => p.key).join(','); // Используем key как идентификатор
+
+    console.log('Параметры для сравнения:', { keys, ids });
+
+    this.router.navigate(['/compare-projects'], {
+      queryParams: { keys, values: ids }
+    }).catch(err => {
+      console.error('Ошибка навигации:', err);
+      this.errorMessage = 'Ошибка перехода на страницу сравнения';
+    });
   }
 }

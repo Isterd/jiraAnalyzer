@@ -1,28 +1,29 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core'
-import {IProj} from "../../models/proj.model";
-import {ProjectServices} from "../../services/project.services";
-import {CheckedProject} from "../../models/check-element.model";
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { IProj } from "../../models/proj.model";
+import { CheckedProject } from "../../models/check-element.model";
 
 @Component({
-  selector: 'project-checkbox',
+  selector: 'app-checkbox-with-project', // Изменяем селектор для единообразия
   templateUrl: './checkbox-with-project.component.html',
   styleUrls: ['./checkbox-with-project.component.css']
 })
-
 export class ProjectWithCheckboxComponent implements OnInit {
-  @Output() onChecked: EventEmitter<any> = new EventEmitter<{}>();
-  @Input() project!: IProj
-  isChecked: Boolean;
+  @Output() onChecked = new EventEmitter<CheckedProject>();
+  @Input() project!: IProj;
+  isChecked: boolean;
 
-  constructor(private projectService: ProjectServices) {}
+  constructor() {}
 
   ngOnInit(): void {
-    this.isChecked = this.project.existence;
+    this.isChecked = this.project.existence ?? false;
   }
 
-  changed(isChecked: any) {
-    //console.log("Child", this.isChecked, this.project.Name)
-    this.onChecked.emit(new CheckedProject(this.project.name, this.isChecked, this.project.id));
+  changed(event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.onChecked.emit({
+      Name: this.project.name,
+      Checked: isChecked,
+      Id: this.project.id
+    });
   }
 }
-

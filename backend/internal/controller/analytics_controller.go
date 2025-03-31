@@ -110,7 +110,7 @@ func (h *AnalyticsController) DeleteProjectAnalytics(w http.ResponseWriter, r *h
 	}
 
 	response := map[string]interface{}{
-		"message": fmt.Sprintf("all analytics data for project %s has been deleted", projectKey),
+		"success": fmt.Sprintf("all analytics data for project %s has been deleted", projectKey),
 	}
 
 	utils.WriteJSONResponse(w, response)
@@ -134,32 +134,13 @@ func (h *AnalyticsController) GetGraph(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.cfg.AnalyticsTimeout)
 	defer cancel()
 
-	var data interface{}
-
-	switch taskNumber {
-	case 1:
-		data, err = h.service.GetOpenTimeHistogram(ctx, projectKey)
-	case 2:
-		data, err = h.service.GetStatusTimeDistribution(ctx, projectKey)
-	case 3:
-		data, err = h.service.GetActivityGraph(ctx, projectKey)
-	case 4:
-		data, err = h.service.GetComplexityGraph(ctx, projectKey)
-	case 5:
-		data, err = h.service.GetPriorityDistribution(ctx, projectKey)
-	case 6:
-		data, err = h.service.GetPriorityDistributionClosedTasks(ctx, projectKey)
-	default:
-		http.Error(w, "Invalid task number", http.StatusBadRequest)
-		return
-	}
-
+	data, err := h.getAnalyticsData(ctx, taskNumber, projectKey)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			http.Error(w, "Request Timeout", http.StatusRequestTimeout)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Error processing project %s: %v", projectKey, err), http.StatusInternalServerError)
 		return
 	}
 
@@ -178,13 +159,13 @@ func (h *AnalyticsController) MakeGraph(w http.ResponseWriter, r *http.Request) 
 	params := mux.Vars(r)
 	taskNumber, err := strconv.Atoi(params["taskNumber"])
 	if err != nil || taskNumber < 1 || taskNumber > 6 {
-		http.Error(w, "Invalid task number", http.StatusBadRequest)
+		http.Error(w, "invalid task number", http.StatusBadRequest)
 		return
 	}
 
 	projectKey := r.URL.Query().Get("project")
 	if projectKey == "" {
-		http.Error(w, "Missing project key", http.StatusBadRequest)
+		http.Error(w, "missing project key", http.StatusBadRequest)
 		return
 	}
 
@@ -193,19 +174,19 @@ func (h *AnalyticsController) MakeGraph(w http.ResponseWriter, r *http.Request) 
 
 	switch taskNumber {
 	case 1:
-		_, err = h.service.CalculateOpenTimeHistogram(ctx, projectKey)
+		_, err = h.service.CalculateOpenTimeHistogram(ctx, projectKey, taskNumber)
 	case 2:
-		_, err = h.service.CalculateStatusTimeDistribution(ctx, projectKey)
+		_, err = h.service.CalculateStatusTimeDistribution(ctx, projectKey, taskNumber)
 	case 3:
-		_, err = h.service.CalculateActivityGraph(ctx, projectKey)
+		_, err = h.service.CalculateActivityGraph(ctx, projectKey, taskNumber)
 	case 4:
-		_, err = h.service.GetComplexityGraph(ctx, projectKey)
+		_, err = h.service.CalculateComplexityGraph(ctx, projectKey, taskNumber)
 	case 5:
-		_, err = h.service.GetPriorityDistribution(ctx, projectKey)
+		_, err = h.service.CalculatePriorityDistribution(ctx, projectKey, taskNumber)
 	case 6:
-		_, err = h.service.GetPriorityDistributionClosedTasks(ctx, projectKey)
+		_, err = h.service.CalculatePriorityDistributionClosedTasks(ctx, projectKey, taskNumber)
 	default:
-		http.Error(w, "Invalid task number", http.StatusBadRequest)
+		http.Error(w, "invalid task number", http.StatusBadRequest)
 		return
 	}
 
@@ -222,7 +203,7 @@ func (h *AnalyticsController) MakeGraph(w http.ResponseWriter, r *http.Request) 
 		"_links": map[string]string{
 			"self": fmt.Sprintf("/api/v1/graph/make/%d?project=%s", taskNumber, projectKey),
 		},
-		"message": "Graph calculation started",
+		"success": "Graph calculation started",
 	}
 
 	utils.WriteJSONResponse(w, response)
@@ -232,90 +213,64 @@ func (h *AnalyticsController) MakeGraph(w http.ResponseWriter, r *http.Request) 
 func (h *AnalyticsController) GetComparison(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	taskNumber, err := strconv.Atoi(params["taskNumber"])
-	if err != nil || taskNumber < 1 || taskNumber > 5 {
+	if err != nil || taskNumber < 1 || taskNumber > 6 {
 		http.Error(w, "Invalid task number", http.StatusBadRequest)
 		return
 	}
 
 	projectKeys := strings.Split(r.URL.Query().Get("project"), ",")
-	if len(projectKeys) != 2 {
-		http.Error(w, "Exactly two project keys are required", http.StatusBadRequest)
+	if len(projectKeys) < 2 || len(projectKeys) > 3 {
+		http.Error(w, "Between 2 and 3 project keys are required", http.StatusBadRequest)
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), h.cfg.AnalyticsTimeout)
 	defer cancel()
 
-	var data interface{}
+	var comparisonResults []map[string]interface{}
 
-	switch taskNumber {
-	case 5:
-		data, err = h.service.GetComparison(ctx, projectKeys[0], projectKeys[1])
-	default:
-		http.Error(w, "Invalid task number", http.StatusBadRequest)
-		return
-	}
-
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			http.Error(w, "Request Timeout", http.StatusRequestTimeout)
+	for _, projectKey := range projectKeys {
+		data, err := h.getAnalyticsData(ctx, taskNumber, projectKey)
+		if err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				http.Error(w, "Request Timeout", http.StatusRequestTimeout)
+				return
+			}
+			http.Error(w, fmt.Sprintf("Error processing project %s: %v", projectKey, err), http.StatusInternalServerError)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+
+		comparisonResults = append(comparisonResults, map[string]interface{}{
+			"project_key": projectKey,
+			"data":        data,
+		})
 	}
 
 	response := map[string]interface{}{
 		"_links": map[string]string{
-			"self": fmt.Sprintf("/api/v1/compare/%d?project=%s,%s", taskNumber, projectKeys[0], projectKeys[1]),
+			"self": fmt.Sprintf("/api/v1/compare/%d?project=%s", taskNumber, strings.Join(projectKeys, ",")),
 		},
-		"data": data,
+		"data": comparisonResults,
 	}
 
 	utils.WriteJSONResponse(w, response)
 }
 
-// POST /api/v1/compare/{taskNumber:[0-9]}
-func (h *AnalyticsController) MakeComparison(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	taskNumber, err := strconv.Atoi(params["taskNumber"])
-	if err != nil || taskNumber < 1 || taskNumber > 5 {
-		http.Error(w, "Invalid task number", http.StatusBadRequest)
-		return
-	}
-
-	projectKeys := strings.Split(r.URL.Query().Get("project"), ",")
-	if len(projectKeys) != 2 {
-		http.Error(w, "Exactly two project keys are required", http.StatusBadRequest)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), h.cfg.AnalyticsTimeout)
-	defer cancel()
-
+func (h *AnalyticsController) getAnalyticsData(ctx context.Context, taskNumber int, projectKey string) (interface{}, error) {
 	switch taskNumber {
+	case 1:
+		return h.service.GetOpenTimeHistogram(ctx, projectKey, taskNumber)
+	case 2:
+		return h.service.GetStatusTimeDistribution(ctx, projectKey, taskNumber)
+	case 3:
+		return h.service.GetActivityGraph(ctx, projectKey, taskNumber)
+	case 4:
+		return h.service.GetComplexityGraph(ctx, projectKey, taskNumber)
 	case 5:
-		_, err = h.service.CalculateComparison(ctx, projectKeys[0], projectKeys[1])
+		return h.service.GetPriorityDistribution(ctx, projectKey, taskNumber)
+	case 6:
+		return h.service.GetPriorityDistributionClosedTasks(ctx, projectKey, taskNumber)
 	default:
-		http.Error(w, "Invalid task number", http.StatusBadRequest)
-		return
+		return nil, fmt.Errorf("invalid task number")
 	}
-
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			http.Error(w, "Request Timeout", http.StatusRequestTimeout)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	response := map[string]interface{}{
-		"_links": map[string]string{
-			"self": fmt.Sprintf("/api/v1/compare/%d?project=%s,%s", taskNumber, projectKeys[0], projectKeys[1]),
-		},
-		"message": "Project comparison calculation started",
-	}
-
-	utils.WriteJSONResponse(w, response)
 }

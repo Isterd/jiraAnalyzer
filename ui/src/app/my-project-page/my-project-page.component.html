@@ -9,11 +9,15 @@
   [myProject]="project">
 </app-my-project>
 
-<div class="body_empty" *ngIf="noProjects && inited">
+<div class="body_empty" *ngIf="hasNoProjects && !error">
   <p>Вы не выбрали ни одного проекта для аналитики.</p>
   <div class="icon">
     <a href="http://localhost:4200/">
       <img src="/assets/images/icon.png" alt="Политех">
     </a>
   </div>
+</div>
+
+<div *ngIf="error" class="error-message">
+  {{ error }}
 </div>

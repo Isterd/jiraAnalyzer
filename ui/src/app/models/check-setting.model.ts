@@ -1,7 +1,7 @@
 export class CheckedSetting{
   constructor(
     public ProjectName: String,
-    public Checked: Boolean,
+    public Checked: boolean,
     public BoxId: Number
   ){}
 }

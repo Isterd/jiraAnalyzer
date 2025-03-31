@@ -3,6 +3,9 @@ import { IProj } from "../../models/proj.model";
 import { SettingBox } from "../../models/setting.model";
 import { Router } from "@angular/router";
 import { DatabaseProjectServices } from "../../services/database-project.services";
+import {catchError, firstValueFrom} from "rxjs";
+import {CheckedSetting} from "../../models/check-setting.model";
+
 
 @Component({
   selector: 'app-my-project',
@@ -14,107 +17,203 @@ export class MyProjectComponent implements OnInit {
   @Input() myProject!: IProj;
   stat: ProjectStat = new ProjectStat();
   checked = 0;
-  complited = 0;
+  completed = 0;
   processed = false;
   settings = false;
   checkboxes: SettingBox[] = [];
+  loadingStats = false;
+  loadingAnalysis = false;
 
-  constructor(private router: Router, private dbProjectService: DatabaseProjectServices) {}
+  constructor(
+    private router: Router,
+    private dbProjectService: DatabaseProjectServices
+  ) {}
 
   ngOnInit(): void {
-    this.processed = false;
-    this.settings = false;
+    this.initializeCheckboxes();
+    this.loadProjectStatistics();
+  }
 
-    // Инициализация чекбоксов
-    this.checkboxes.push(new SettingBox("Гистограмма, отражающая время, которое задачи провели в открытом состоянии", false, 1));
-    this.checkboxes.push(new SettingBox("Диаграммы, которые показывают распределение времени по состояниям задач", false, 2));
-    this.checkboxes.push(new SettingBox("График активности по задачам", false, 3));
-    this.checkboxes.push(new SettingBox("График сложности задач", false, 4));
-    this.checkboxes.push(new SettingBox("График, отражающий приоритетность всех задач", false, 5));
-    this.checkboxes.push(new SettingBox("График, отражающий приоритетность закрытых задач", false, 6));
+  private initializeCheckboxes(): void {
+    this.checkboxes = [
+      new SettingBox("Гистограмма времени в открытом состоянии", false, 1),
+      new SettingBox("Диаграммы распределения по состояниям", false, 2),
+      new SettingBox("График активности по задачам", false, 3),
+      new SettingBox("График сложности задач", false, 4),
+      new SettingBox("Приоритетность всех задач", false, 5),
+      new SettingBox("Приоритетность закрытых задач", false, 6)
+    ];
+  }
 
-    // Получение аналитики проекта
-    this.dbProjectService.getProjectAnalytics(this.myProject.key).subscribe(
-      (response: any) => {
-        if (response && response.data) {
-          const data = response.data;
-          this.stat.AllIssuesCount = data.total_issues || 0;
-          this.stat.OpenIssuesCount = data.open_issues || 0;
-          this.stat.CloseIssuesCount = data.closed_issues || 0;
-          this.stat.ReopenedIssuesCount = data.reopen_issues || 0;
-          this.stat.ResolvedIssuesCount = data.resolved_issues || 0;
-          this.stat.ProgressIssuesCount = data.in_progress_issues || 0;
-          this.stat.AverageTime = data.average_time_issues || 0;
-          this.stat.AverageIssuesCount = data.average_count_issues || 0;
+  private loadProjectStatistics(): void {
+    this.loadingStats = true;
+    console.log('Загрузка аналитики для проекта:', this.myProject.key);
+
+    this.dbProjectService.getProjectAnalytics(this.myProject.key).subscribe({
+      next: (response) => {
+        console.log('Обработанные данные аналитики:', response);
+        if (response?.data) {
+          this.updateStatistics(response.data);
         } else {
-          console.error("Ответ сервера не содержит данных:", response);
-          alert("Не удалось получить данные проекта. Попробуйте позже.");
+          console.warn('Нет данных аналитики для проекта', this.myProject.key);
+          // Установите значения по умолчанию
+          this.updateStatistics({
+            allIssuesCount: 0,
+            openIssuesCount: 0,
+            closeIssuesCount: 0,
+            reopenedIssuesCount: 0,
+            resolvedIssuesCount: 0,
+            progressIssuesCount: 0,
+            averageTime: 0,
+            averageIssuesCount: 0
+          });
         }
+        this.loadingStats = false;
       },
-      (error: any) => {
-        console.error("Ошибка при получении статистики проекта:", error);
-        alert("Произошла ошибка при загрузке данных проекта.");
+      error: (error) => {
+        console.error('Ошибка загрузки аналитики:', error);
+        this.loadingStats = false;
       }
-    );
-  }
-
-  async processProject() {
-    const selectedTasks = this.checkboxes
-      .filter((box) => box.Checked)
-      .map((box) => Number(box.BoxId));
-
-    if (selectedTasks.length === 0) {
-      alert("Выберите хотя бы одну аналитическую задачу.");
-      return;
-    }
-
-    this.processed = true;
-    this.complited = 0;
-
-    try {
-      for (const taskNumber of selectedTasks) {
-        await this.dbProjectService.makeGraph(taskNumber.toString(), this.myProject.key).toPromise();
-        this.complited++;
-      }
-      alert("Все графики успешно созданы.");
-    } catch (error) {
-      console.error("Ошибка при создании графиков:", error);
-      alert("Произошла ошибка при создании графиков.");
-    }
-  }
-
-  checkResult() {
-    const ids = this.checkboxes
-      .filter((box) => box.Checked)
-      .map((box) => Number(box.BoxId));
-
-    this.router.navigate(['/project-stat'], {
-      queryParams: {
-        keys: this.myProject.key,
-        value: ids.join(','),
-      },
     });
   }
 
-  clickOnSettings() {
+  private updateStatistics(data: any): void {
+    console.log('Обновление статистики с данными:', data);
+    this.stat = {
+      AllIssuesCount: data.allIssuesCount ?? 0,
+      OpenIssuesCount: data.openIssuesCount ?? 0,
+      CloseIssuesCount: data.closeIssuesCount ?? 0,
+      ReopenedIssuesCount: data.reopenedIssuesCount ?? 0,
+      ResolvedIssuesCount: data.resolvedIssuesCount ?? 0,
+      ProgressIssuesCount: data.progressIssuesCount ?? 0,
+      AverageTime: data.averageTime ?? 0,
+      AverageIssuesCount: data.averageIssuesCount ?? 0
+    };
+
+    // Для отладки - временный вывод
+    console.log('Обновленная статистика:', this.stat);
+  }
+
+  async processProject(): Promise<void> {
+    const selectedTasks = this.getSelectedTasks();
+
+    if (selectedTasks.length === 0) {
+      alert("Выберите хотя бы одну аналитическую задачу");
+      return;
+    }
+
+    this.loadingAnalysis = true;
+    this.processed = false; // Используем processed вместо tasksProcessed
+
+    try {
+      for (const taskNumber of selectedTasks) {
+        const response = await firstValueFrom(
+          this.dbProjectService.makeGraph(taskNumber.toString(), this.myProject.key)
+        );
+
+        if (!response.success) {
+          throw new Error(response.message || 'Ошибка сервера');
+        }
+      }
+
+      this.processed = true; // Устанавливаем processed
+      alert("Все выбранные аналитические задачи успешно обработаны!");
+    } catch (error) {
+      console.error('Ошибка обработки задач:', error);
+      alert('Произошла ошибка при обработке: ' + (error instanceof Error ? error.message : 'Неизвестная ошибка'));
+    } finally {
+      this.loadingAnalysis = false;
+    }
+  }
+
+  private getSelectedTasks(): number[] {
+    return this.checkboxes
+      .filter(box => box.Checked)
+      .map(box => Number(box.BoxId));
+  }
+
+  private prepareForProcessing(): void {
+    this.loadingAnalysis = true;
+    this.processed = false;
+    this.completed = 0;
+  }
+
+
+  private handleProcessingError(error: any): void {
+    let errorMessage = 'Произошла ошибка при обработке задач';
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+
+    console.error('Ошибка обработки:', error);
+    alert(errorMessage);
+    this.resetProcessingState();
+  }
+
+  private resetProcessingState(): void {
+    this.processed = false;
+    this.completed = 0;
+    this.loadingAnalysis = false;
+    this.checked = 0; // Сбрасываем счетчик выбранных задач
+    // Сбрасываем чекбоксы
+    this.checkboxes.forEach(box => box.Checked = false);
+  }
+
+  checkResult(): void {
+    if (!this.processed) { // Проверяем processed
+      alert('Сначала завершите обработку выбранных задач');
+      return;
+    }
+
+    const selectedIds = this.checkboxes
+      .filter(box => box.Checked)
+      .map(box => box.BoxId);
+
+    if (selectedIds.length === 0) {
+      alert('Нет выбранных задач для просмотра');
+      return;
+    }
+
+    this.navigateToProjectStats(selectedIds);
+  }
+
+
+
+  private navigateToProjectStats(ids: number[]): void {
+    this.router.navigate(['/project-stat', this.myProject.key], {
+      queryParams: {
+        value: ids.join(',')
+      }
+    });
+  }
+
+  toggleSettings(): void {
     this.settings = !this.settings;
   }
 
-  disableCheckResultButton() {
-    const selectedTasks = this.checkboxes.filter((box) => box.Checked).length;
-    return !this.processed || selectedTasks !== this.complited;
+  get canViewResults(): boolean {
+    return this.processed && this.checked > 0;
   }
 
-  disableAnalyzeButton() {
-    return !this.checkboxes.some((checkbox) => checkbox.Checked) || this.checked !== this.complited;
+  get canAnalyze(): boolean {
+    return this.checked > 0 && !this.loadingAnalysis;
   }
 
-  childOnChecked(setting: any) {
-    const box = this.checkboxes.find((item) => item.BoxId === setting.BoxId);
+  get hasSelectedTasks(): boolean {
+    return this.checked > 0;
+  }
+
+  onSettingChanged(setting: CheckedSetting): void {
+    const box = this.checkboxes.find(b => b.BoxId === setting.BoxId);
     if (box) {
       box.Checked = setting.Checked;
+      this.checked = this.checkboxes.filter(b => b.Checked).length;
     }
   }
+
 }
 
 class ProjectStat {

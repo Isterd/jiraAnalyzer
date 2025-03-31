@@ -42,7 +42,6 @@ type Analytics interface {
 	CalculateComplexityGraph(ctx context.Context, projectKey string) ([]models.ComplexityData, error)
 	CalculatePriorityDistribution(ctx context.Context, projectKey string) ([]models.PriorityData, error)
 	CalculatePriorityDistributionClosedTasks(ctx context.Context, projectKey string) ([]models.PriorityData, error)
-	CompareProjects(ctx context.Context, projectKey1, projectKey2 string) ([]models.ComparisonProjects, error)
 }
 
 type JiraClient interface {

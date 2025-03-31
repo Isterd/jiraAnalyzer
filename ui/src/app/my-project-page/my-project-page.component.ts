@@ -12,31 +12,35 @@ export class MyProjectPageComponent implements OnInit {
   myProjects: IProj[] = [];
   checked: Map<string, number> = new Map(); // Уточнение типов
   loading = false;
-  noProjects = false;
-  inited = false;
+  error: string | null = null;
+  initialized = false; // Заменяем inited на initialized
 
-  constructor(private myProjectService: DatabaseProjectServices) {}
+  constructor(private dbProjectService: DatabaseProjectServices) {}
 
   ngOnInit(): void {
+    this.loadProjects();
+    this.initialized = true; // Устанавливаем флаг инициализации
+  }
+
+  loadProjects(): void {
     this.loading = true;
-    this.myProjectService.getAll().subscribe(
-      (projects) => {
-        if (projects && projects.projects) {
-          this.noProjects = projects.projects.length === 0;
-          this.myProjects = projects.projects;
-          this.inited = true;
-        } else {
-          console.error('Ответ сервера некорректен:', projects);
-          this.noProjects = true;
-        }
+    this.error = null;
+
+    this.dbProjectService.getAll().subscribe({
+      next: (response) => {
+        this.myProjects = response.projects || [];
         this.loading = false;
       },
-      (error) => {
-        console.error('Ошибка при загрузке проектов:', error);
-        alert('Не удалось загрузить проекты. Проверьте соединение с сервером.');
+      error: (error) => {
+        console.error('Error loading projects:', error);
+        this.error = 'Failed to load projects';
         this.loading = false;
       }
-    );
+    });
+  }
+
+  get hasNoProjects(): boolean { // Заменяем noProjects на вычисляемое свойство
+    return this.initialized && this.myProjects.length === 0;
   }
 
   childOnChecked(project: CheckedProject): void {

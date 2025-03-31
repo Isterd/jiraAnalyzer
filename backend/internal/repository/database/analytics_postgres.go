@@ -276,25 +276,3 @@ func (r *AnalyticsPostgres) CalculatePriorityDistributionClosedTasks(ctx context
 	}
 	return data, nil
 }
-
-func (r *AnalyticsPostgres) CompareProjects(ctx context.Context, projectKey1, projectKey2 string) ([]models.ComparisonProjects, error) {
-	query := `
-	SELECT 
-    	project_key,
-    	COUNT(*) AS total_tasks,
-    	COUNT(*) FILTER (WHERE status = 'Open') AS open_tasks,
-    	COUNT(*) FILTER (WHERE status IN ('Closed', 'Resolved')) AS closed_tasks,
-    	AVG(EXTRACT(EPOCH FROM (closed - created)) / 3600) AS avg_completion_time_hours
-	FROM issues
-	WHERE project_key IN ($1, $2)
-	GROUP BY project_key
-	`
-
-	var projects []models.ComparisonProjects
-	err := r.db.SelectContext(ctx, &projects, query, projectKey1, projectKey2)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compare projects: %w", err)
-	}
-
-	return projects, nil
-}

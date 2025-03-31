@@ -42,7 +42,7 @@ func (s *AnalyticsService) DeleteProjectAnalytics(ctx context.Context, projectKe
 	return s.repo.DeleteProjectAnalytics(ctx, projectKey)
 }
 
-func (s *AnalyticsService) CalculateOpenTimeHistogram(ctx context.Context, projectKey string) ([]models.HistogramData, error) {
+func (s *AnalyticsService) CalculateOpenTimeHistogram(ctx context.Context, projectKey string, taskNumber int) ([]models.HistogramData, error) {
 	histogram, err := s.repo.CalculateOpenTimeHistogram(ctx, projectKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate histogram: %w", err)
@@ -53,21 +53,21 @@ func (s *AnalyticsService) CalculateOpenTimeHistogram(ctx context.Context, proje
 		return nil, fmt.Errorf("failed to marshal histogram data: %w", err)
 	}
 
-	if err := s.repo.SaveAnalytics(ctx, projectKey, 1, data); err != nil {
+	if err := s.repo.SaveAnalytics(ctx, projectKey, taskNumber, data); err != nil {
 		return nil, fmt.Errorf("failed to save histogram data: %w", err)
 	}
 
 	return histogram, nil
 }
 
-func (s *AnalyticsService) GetOpenTimeHistogram(ctx context.Context, projectKey string) ([]models.HistogramData, error) {
-	data, err := s.repo.GetAnalytics(ctx, projectKey, 1)
+func (s *AnalyticsService) GetOpenTimeHistogram(ctx context.Context, projectKey string, taskNumber int) ([]models.HistogramData, error) {
+	data, err := s.repo.GetAnalytics(ctx, projectKey, taskNumber)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get histogram data: %w", err)
 	}
 
 	if len(data) == 0 {
-		return s.CalculateOpenTimeHistogram(ctx, projectKey)
+		return s.CalculateOpenTimeHistogram(ctx, projectKey, taskNumber)
 	}
 
 	var histogram []models.HistogramData
@@ -78,7 +78,7 @@ func (s *AnalyticsService) GetOpenTimeHistogram(ctx context.Context, projectKey 
 	return histogram, nil
 }
 
-func (s *AnalyticsService) CalculateStatusTimeDistribution(ctx context.Context, projectKey string) ([]models.StatusTimeData, error) {
+func (s *AnalyticsService) CalculateStatusTimeDistribution(ctx context.Context, projectKey string, taskNumber int) ([]models.StatusTimeData, error) {
 	distribution, err := s.repo.CalculateStatusTimeDistribution(ctx, projectKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate status time distribution: %w", err)
@@ -89,21 +89,21 @@ func (s *AnalyticsService) CalculateStatusTimeDistribution(ctx context.Context, 
 		return nil, fmt.Errorf("failed to marshal status time distribution data: %w", err)
 	}
 
-	if err := s.repo.SaveAnalytics(ctx, projectKey, 2, data); err != nil {
+	if err := s.repo.SaveAnalytics(ctx, projectKey, taskNumber, data); err != nil {
 		return nil, fmt.Errorf("failed to save status time distribution data: %w", err)
 	}
 
 	return distribution, nil
 }
 
-func (s *AnalyticsService) GetStatusTimeDistribution(ctx context.Context, projectKey string) ([]models.StatusTimeData, error) {
-	data, err := s.repo.GetAnalytics(ctx, projectKey, 2)
+func (s *AnalyticsService) GetStatusTimeDistribution(ctx context.Context, projectKey string, taskNumber int) ([]models.StatusTimeData, error) {
+	data, err := s.repo.GetAnalytics(ctx, projectKey, taskNumber)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get status time distribution data: %w", err)
 	}
 
 	if len(data) == 0 {
-		return s.CalculateStatusTimeDistribution(ctx, projectKey)
+		return s.CalculateStatusTimeDistribution(ctx, projectKey, taskNumber)
 	}
 
 	var distribution []models.StatusTimeData
@@ -114,7 +114,7 @@ func (s *AnalyticsService) GetStatusTimeDistribution(ctx context.Context, projec
 	return distribution, nil
 }
 
-func (s *AnalyticsService) CalculateActivityGraph(ctx context.Context, projectKey string) ([]models.ActivityData, error) {
+func (s *AnalyticsService) CalculateActivityGraph(ctx context.Context, projectKey string, taskNumber int) ([]models.ActivityData, error) {
 	activity, err := s.repo.CalculateActivityGraph(ctx, projectKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate activity graph: %w", err)
@@ -125,21 +125,21 @@ func (s *AnalyticsService) CalculateActivityGraph(ctx context.Context, projectKe
 		return nil, fmt.Errorf("failed to marshal activity graph data: %w", err)
 	}
 
-	if err := s.repo.SaveAnalytics(ctx, projectKey, 3, data); err != nil {
+	if err := s.repo.SaveAnalytics(ctx, projectKey, taskNumber, data); err != nil {
 		return nil, fmt.Errorf("failed to save activity graph data: %w", err)
 	}
 
 	return activity, nil
 }
 
-func (s *AnalyticsService) GetActivityGraph(ctx context.Context, projectKey string) ([]models.ActivityData, error) {
-	data, err := s.repo.GetAnalytics(ctx, projectKey, 3)
+func (s *AnalyticsService) GetActivityGraph(ctx context.Context, projectKey string, taskNumber int) ([]models.ActivityData, error) {
+	data, err := s.repo.GetAnalytics(ctx, projectKey, taskNumber)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get activity graph data: %w", err)
 	}
 
 	if len(data) == 0 {
-		return s.CalculateActivityGraph(ctx, projectKey)
+		return s.CalculateActivityGraph(ctx, projectKey, taskNumber)
 	}
 
 	var activity []models.ActivityData
@@ -150,7 +150,7 @@ func (s *AnalyticsService) GetActivityGraph(ctx context.Context, projectKey stri
 	return activity, nil
 }
 
-func (s *AnalyticsService) CalculateComplexityGraph(ctx context.Context, projectKey string) ([]models.ComplexityData, error) {
+func (s *AnalyticsService) CalculateComplexityGraph(ctx context.Context, projectKey string, taskNumber int) ([]models.ComplexityData, error) {
 	complexity, err := s.repo.CalculateComplexityGraph(ctx, projectKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate complexity graph: %w", err)
@@ -161,21 +161,21 @@ func (s *AnalyticsService) CalculateComplexityGraph(ctx context.Context, project
 		return nil, fmt.Errorf("failed to marshal complexity graph data: %w", err)
 	}
 
-	if err := s.repo.SaveAnalytics(ctx, projectKey, 5, data); err != nil {
+	if err := s.repo.SaveAnalytics(ctx, projectKey, taskNumber, data); err != nil {
 		return nil, fmt.Errorf("failed to save complexity graph data: %w", err)
 	}
 
 	return complexity, nil
 }
 
-func (s *AnalyticsService) GetComplexityGraph(ctx context.Context, projectKey string) ([]models.ComplexityData, error) {
-	data, err := s.repo.GetAnalytics(ctx, projectKey, 5)
+func (s *AnalyticsService) GetComplexityGraph(ctx context.Context, projectKey string, taskNumber int) ([]models.ComplexityData, error) {
+	data, err := s.repo.GetAnalytics(ctx, projectKey, taskNumber)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get complexity graph data: %w", err)
 	}
 
 	if len(data) == 0 {
-		return s.CalculateComplexityGraph(ctx, projectKey)
+		return s.CalculateComplexityGraph(ctx, projectKey, taskNumber)
 	}
 
 	var complexity []models.ComplexityData
@@ -186,7 +186,7 @@ func (s *AnalyticsService) GetComplexityGraph(ctx context.Context, projectKey st
 	return complexity, nil
 }
 
-func (s *AnalyticsService) CalculatePriorityDistribution(ctx context.Context, projectKey string) ([]models.PriorityData, error) {
+func (s *AnalyticsService) CalculatePriorityDistribution(ctx context.Context, projectKey string, taskNumber int) ([]models.PriorityData, error) {
 	distribution, err := s.repo.CalculatePriorityDistribution(ctx, projectKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate priority distribution: %w", err)
@@ -197,21 +197,21 @@ func (s *AnalyticsService) CalculatePriorityDistribution(ctx context.Context, pr
 		return nil, fmt.Errorf("failed to marshal priority distribution data: %w", err)
 	}
 
-	if err := s.repo.SaveAnalytics(ctx, projectKey, 5, data); err != nil {
+	if err := s.repo.SaveAnalytics(ctx, projectKey, taskNumber, data); err != nil {
 		return nil, fmt.Errorf("failed to save priority distribution data: %w", err)
 	}
 
 	return distribution, nil
 }
 
-func (s *AnalyticsService) GetPriorityDistribution(ctx context.Context, projectKey string) ([]models.PriorityData, error) {
-	data, err := s.repo.GetAnalytics(ctx, projectKey, 5)
+func (s *AnalyticsService) GetPriorityDistribution(ctx context.Context, projectKey string, taskNumber int) ([]models.PriorityData, error) {
+	data, err := s.repo.GetAnalytics(ctx, projectKey, taskNumber)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get priority distribution data: %w", err)
 	}
 
 	if len(data) == 0 {
-		return s.CalculatePriorityDistribution(ctx, projectKey)
+		return s.CalculatePriorityDistribution(ctx, projectKey, taskNumber)
 	}
 
 	var distribution []models.PriorityData
@@ -222,7 +222,7 @@ func (s *AnalyticsService) GetPriorityDistribution(ctx context.Context, projectK
 	return distribution, nil
 }
 
-func (s *AnalyticsService) CalculatePriorityDistributionClosedTasks(ctx context.Context, projectKey string) ([]models.PriorityData, error) {
+func (s *AnalyticsService) CalculatePriorityDistributionClosedTasks(ctx context.Context, projectKey string, taskNumber int) ([]models.PriorityData, error) {
 	distribution, err := s.repo.CalculatePriorityDistributionClosedTasks(ctx, projectKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate priority distribution closed tasks: %w", err)
@@ -233,21 +233,21 @@ func (s *AnalyticsService) CalculatePriorityDistributionClosedTasks(ctx context.
 		return nil, fmt.Errorf("failed to marshal priority distribution closed tasks data: %w", err)
 	}
 
-	if err := s.repo.SaveAnalytics(ctx, projectKey, 5, data); err != nil {
+	if err := s.repo.SaveAnalytics(ctx, projectKey, taskNumber, data); err != nil {
 		return nil, fmt.Errorf("failed to save priority distribution closed tasks data: %w", err)
 	}
 
 	return distribution, nil
 }
 
-func (s *AnalyticsService) GetPriorityDistributionClosedTasks(ctx context.Context, projectKey string) ([]models.PriorityData, error) {
-	data, err := s.repo.GetAnalytics(ctx, projectKey, 5)
+func (s *AnalyticsService) GetPriorityDistributionClosedTasks(ctx context.Context, projectKey string, taskNumber int) ([]models.PriorityData, error) {
+	data, err := s.repo.GetAnalytics(ctx, projectKey, taskNumber)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get priority distribution closed tasks data: %w", err)
 	}
 
 	if len(data) == 0 {
-		return s.CalculatePriorityDistributionClosedTasks(ctx, projectKey)
+		return s.CalculatePriorityDistributionClosedTasks(ctx, projectKey, taskNumber)
 	}
 
 	var distribution []models.PriorityData
@@ -256,40 +256,4 @@ func (s *AnalyticsService) GetPriorityDistributionClosedTasks(ctx context.Contex
 	}
 
 	return distribution, nil
-}
-
-func (s *AnalyticsService) CalculateComparison(ctx context.Context, projectKey1, projectKey2 string) ([]models.ComparisonProjects, error) {
-	comparison, err := s.repo.CompareProjects(ctx, projectKey1, projectKey2)
-	if err != nil {
-		return nil, fmt.Errorf("failed to calculate project comparison: %w", err)
-	}
-
-	data, err := json.Marshal(comparison)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal comparison data: %w", err)
-	}
-
-	if err := s.repo.SaveAnalytics(ctx, fmt.Sprintf("%s-%s", projectKey1, projectKey2), 6, data); err != nil {
-		return nil, fmt.Errorf("failed to save comparison data: %w", err)
-	}
-
-	return comparison, nil
-}
-
-func (s *AnalyticsService) GetComparison(ctx context.Context, projectKey1, projectKey2 string) ([]models.ComparisonProjects, error) {
-	data, err := s.repo.GetAnalytics(ctx, fmt.Sprintf("%s-%s", projectKey1, projectKey2), 6)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("failed to get comparison data: %w", err)
-	}
-
-	if len(data) == 0 {
-		return s.CalculateComparison(ctx, projectKey1, projectKey2)
-	}
-
-	var comparison []models.ComparisonProjects
-	if err := json.Unmarshal(data, &comparison); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal comparison data: %w", err)
-	}
-
-	return comparison, nil
 }
